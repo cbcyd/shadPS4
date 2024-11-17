@@ -122,9 +122,9 @@ vk::BufferView Buffer::View(u32 offset, u32 size, bool is_written, AmdGpu::DataF
     const vk::BufferViewCreateInfo view_ci = {
         .pNext = instance->IsMaintenance5Supported() ? &usage_flags : nullptr,
         .buffer = buffer.buffer,
-        .format = Vulkan::LiverpoolToVK::SurfaceFormat(dfmt, nfmt),
+        .format = dfmt != AmdGpu::DataFormat::Format32_32_32 ? Vulkan::LiverpoolToVK::SurfaceFormat(dfmt, nfmt) : vk::Format::eR32G32B32A32Uint,
         .offset = offset,
-        .range = size,
+        .range = std::min(dfmt == AmdGpu::DataFormat::Format32_32_32 ? Common::AlignUp(size, 16u) : size, instance->MaxTexelBufferElements() * 4),
     };
     const auto [view_result, view] = instance->GetDevice().createBufferView(view_ci);
     ASSERT_MSG(view_result == vk::Result::eSuccess, "Failed to create buffer view: {}",
