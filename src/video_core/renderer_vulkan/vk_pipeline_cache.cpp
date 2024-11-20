@@ -360,23 +360,23 @@ bool PipelineCache::RefreshGraphicsKey() {
     TryBindStage(Stage::Fragment, LogicalStage::Fragment);
 
     const auto* vs_info = infos[static_cast<u32>(Shader::Stage::Vertex)];
-     if (vs_info && !instance.IsVertexInputDynamicState()) {
-         u32 vertex_binding = 0;
-         for (const auto& input : vs_info->vs_inputs) {
-             if (input.instance_step_rate == Shader::Info::VsInput::InstanceIdType::OverStepRate0 ||
-                 input.instance_step_rate == Shader::Info::VsInput::InstanceIdType::OverStepRate1) {
-                 continue;
-             }
-             const auto& buffer =
-                 vs_info->ReadUd<AmdGpu::Buffer>(input.sgpr_base, input.dword_offset);
-             if (buffer.GetSize() == 0) {
-                 continue;
-             }
-             ASSERT(vertex_binding < MaxVertexBufferCount);
-             key.vertex_buffer_formats[vertex_binding++] =
-                 Vulkan::LiverpoolToVK::SurfaceFormat(buffer.GetDataFmt(), buffer.GetNumberFmt());
-         }
-     }
+    if (vs_info && !instance.IsVertexInputDynamicState()) {
+        u32 vertex_binding = 0;
+        for (const auto& input : vs_info->vs_inputs) {
+            if (input.instance_step_rate == Shader::Info::VsInput::InstanceIdType::OverStepRate0 ||
+                input.instance_step_rate == Shader::Info::VsInput::InstanceIdType::OverStepRate1) {
+                continue;
+            }
+            const auto& buffer =
+                vs_info->ReadUdReg<AmdGpu::Buffer>(input.sgpr_base, input.dword_offset);
+            if (buffer.GetSize() == 0) {
+                continue;
+            }
+            ASSERT(vertex_binding < MaxVertexBufferCount);
+            key.vertex_buffer_formats[vertex_binding++] =
+                Vulkan::LiverpoolToVK::SurfaceFormat(buffer.GetDataFmt(), buffer.GetNumberFmt());
+        }
+    }
 
     const auto* fs_info = infos[static_cast<u32>(Shader::Stage::Fragment)];
     
@@ -414,25 +414,6 @@ bool PipelineCache::RefreshGraphicsKey() {
         TryBindStage(Stage::Vertex, LogicalStage::Vertex);
         break;
     }
-    }
-
-    const auto* vs_info = infos[static_cast<u32>(LogicalStage::Vertex)];
-    if (vs_info && !instance.IsVertexInputDynamicState()) {
-        u32 vertex_binding = 0;
-        for (const auto& input : vs_info->vs_inputs) {
-            if (input.instance_step_rate == Shader::Info::VsInput::InstanceIdType::OverStepRate0 ||
-                input.instance_step_rate == Shader::Info::VsInput::InstanceIdType::OverStepRate1) {
-                continue;
-            }
-            const auto& buffer =
-                vs_info->ReadUdReg<AmdGpu::Buffer>(input.sgpr_base, input.dword_offset);
-            if (buffer.GetSize() == 0) {
-                continue;
-            }
-            ASSERT(vertex_binding < MaxVertexBufferCount);
-            key.vertex_buffer_formats[vertex_binding++] =
-                Vulkan::LiverpoolToVK::SurfaceFormat(buffer.GetDataFmt(), buffer.GetNumberFmt());
-        }
     }
 
     // Second pass to fill remain CB pipeline key data
