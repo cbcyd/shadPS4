@@ -359,7 +359,7 @@ bool PipelineCache::RefreshGraphicsKey() {
     infos.fill(nullptr);
     TryBindStage(Stage::Fragment, LogicalStage::Fragment);
 
-    const auto* vs_info = infos[static_cast<u32>(Shader::Stage::Vertex)];
+    const auto* vs_info = infos[static_cast<u32>(LogicalStage::Vertex)];
     if (vs_info && !instance.IsVertexInputDynamicState()) {
         u32 vertex_binding = 0;
         for (const auto& input : vs_info->vs_inputs) {
