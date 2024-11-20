@@ -201,20 +201,14 @@ vk::SamplerAddressMode ClampMode(AmdGpu::ClampMode mode) {
         return vk::SamplerAddressMode::eRepeat;
     case AmdGpu::ClampMode::Mirror:
         return vk::SamplerAddressMode::eMirroredRepeat;
-    case AmdGpu::ClampMode::ClampLastTexel:
+    case AmdGpu::ClampMode::ClampToLastTexel:
         return vk::SamplerAddressMode::eClampToEdge;
     case AmdGpu::ClampMode::MirrorOnceHalfBorder:
     case AmdGpu::ClampMode::MirrorOnceBorder:
-        LOG_WARNING(Render_Vulkan, "Unimplemented clamp mode {}, using closest equivalent.",
-                    static_cast<u32>(mode));
-        [[fallthrough]];
     case AmdGpu::ClampMode::MirrorOnceLastTexel:
         return vk::SamplerAddressMode::eMirrorClampToEdge;
-    case AmdGpu::ClampMode::ClampHalfBorder:
-        LOG_WARNING(Render_Vulkan, "Unimplemented clamp mode {}, using closest equivalent.",
-                    static_cast<u32>(mode));
-        [[fallthrough]];
-    case AmdGpu::ClampMode::ClampBorder:
+    case AmdGpu::ClampMode::ClampToHalfBorder:
+    case AmdGpu::ClampMode::ClampToBorder:
         return vk::SamplerAddressMode::eClampToBorder;
     default:
         UNREACHABLE();
@@ -247,10 +241,10 @@ vk::CompareOp DepthCompare(AmdGpu::DepthCompare comp) {
 vk::Filter Filter(AmdGpu::Filter filter) {
     switch (filter) {
     case AmdGpu::Filter::Point:
-    case AmdGpu::Filter::AnisoPoint:
+    case AmdGpu::Filter::AnisotropicPoint:
         return vk::Filter::eNearest;
     case AmdGpu::Filter::Bilinear:
-    case AmdGpu::Filter::AnisoLinear:
+    case AmdGpu::Filter::AnisotropicLinear:
         return vk::Filter::eLinear;
     default:
         UNREACHABLE();
@@ -270,14 +264,14 @@ vk::SamplerReductionMode FilterMode(AmdGpu::FilterMode mode) {
     }
 }
 
+// Converts MipFilter to Vulkan SamplerMipmapMode
 vk::SamplerMipmapMode MipFilter(AmdGpu::MipFilter filter) {
     switch (filter) {
     case AmdGpu::MipFilter::Point:
+    case AmdGpu::MipFilter::None:
         return vk::SamplerMipmapMode::eNearest;
     case AmdGpu::MipFilter::Linear:
         return vk::SamplerMipmapMode::eLinear;
-    case AmdGpu::MipFilter::None:
-        return vk::SamplerMipmapMode::eNearest;
     default:
         UNREACHABLE();
     }
@@ -285,10 +279,10 @@ vk::SamplerMipmapMode MipFilter(AmdGpu::MipFilter filter) {
 
 vk::BorderColor BorderColor(AmdGpu::BorderColor color) {
     switch (color) {
-    case AmdGpu::BorderColor::OpaqueBlack:
-        return vk::BorderColor::eFloatOpaqueBlack;
     case AmdGpu::BorderColor::TransparentBlack:
         return vk::BorderColor::eFloatTransparentBlack;
+    case AmdGpu::BorderColor::OpaqueBlack:
+        return vk::BorderColor::eFloatOpaqueBlack;
     case AmdGpu::BorderColor::White:
         return vk::BorderColor::eFloatOpaqueWhite;
     case AmdGpu::BorderColor::Custom:
