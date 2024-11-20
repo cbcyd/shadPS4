@@ -383,7 +383,7 @@ jobs:
       with:
         name: shadps4-linux-qt-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}
         path: Shadps4-qt.AppImage
-
+    
   linux-flatpak:
     runs-on: ubuntu-24.04
     needs: get-info
@@ -404,10 +404,10 @@ jobs:
       with:
         path: shadps4.flatpak
         name: shadps4-linux-flatpak-${{ needs.get-info.outputs.date }}-${{ needs.get-info.outputs.shorthash }}
-
+        
   pre-release:
     if: github.ref == 'refs/heads/mainBB' && github.repository == 'diegolix29/shadPS4' && github.event_name == 'push'
-    needs: [get-info, windows-sdl, windows-qt, macos-sdl, macos-qt, linux-sdl, linux-qt, linux-flatpak]
+    needs: [get-info, windows-sdl, windows-qt, macos-sdl, macos-qt, linux-flatpak, linux-sdl, linux-qt]
     runs-on: ubuntu-latest
     steps:
     - name: Download all artifacts
@@ -426,8 +426,8 @@ jobs:
           fi
         done
   
-    - name: Get latest pre-release information
-      id: get_latest_pre-release
+    - name: Get latest release information
+      id: get_latest_release
       env:
         GITHUB_TOKEN: ${{ secrets.SHADPS4_TOKEN_REPO }}
       run: |
@@ -436,7 +436,7 @@ jobs:
         echo "last_release_tag=$(echo "$latest_release_info" | jq -r '.tag_name')" >> $GITHUB_ENV
 
     - name: Create Pre-Release on GitHub
-      id: create_pre-release
+      id: create_release
       uses: ncipollo/release-action@v1
       with:
         token: ${{ secrets.SHADPS4_TOKEN_REPO }}
