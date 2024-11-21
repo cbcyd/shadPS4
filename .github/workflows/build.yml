@@ -3,11 +3,7 @@
 
 name: Build and Release
 
-on:
-  push:
-    branches: [ "Full-BB" ]
-  pull_request:
-    branches: [ "*" ]
+on: [push, pull_request]
 
 concurrency:
   group: ci-${{ github.event_name }}-${{ github.ref }}
