@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include <algorithm>
+
 #include <boost/container/small_vector.hpp>
 #include "shader_recompiler/info.h"
 #include "shader_recompiler/ir/basic_block.h"
@@ -669,6 +670,7 @@ void PatchImageInstruction(IR::Block& block, IR::Inst& inst, Info& info, Descrip
         .is_depth = bool(inst_info.is_depth),
         .is_atomic = IsImageAtomicInstruction(inst),
         .is_array = bool(inst_info.is_array),
+        .is_written = inst.GetOpcode() == IR::Opcode::ImageWrite,
     });
 
     // Sample instructions must be resolved into a new instruction using address register data.

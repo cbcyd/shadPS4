@@ -43,11 +43,16 @@ TextureCache::TextureCache(const Vulkan::Instance& instance_, Vulkan::Scheduler&
 
 TextureCache::~TextureCache() = default;
 
-void TextureCache::InvalidateMemory(VAddr address, size_t size) {
+void TextureCache::InvalidateMemory(VAddr addr, VAddr addr_aligned, size_t size) {
     std::scoped_lock lock{mutex};
-    ForEachImageInRegion(address, size, [&](ImageId image_id, Image& image) {
-        // Ensure image is reuploaded when accessed again.
-        image.flags |= ImageFlagBits::CpuDirty;
+    ForEachImageInRegion(addr_aligned, size, [&](ImageId image_id, Image& image) {
+        const auto heuristic =
+            addr < image.info.guest_address && True(image.flags & ImageFlagBits::GpuModified);
+        const auto image_end = image.info.guest_address + image.info.guest_size_bytes;
+        if (addr < image_end && !heuristic) {
+            // Ensure image is reuploaded when accessed again.
+            image.flags |= ImageFlagBits::CpuDirty;
+        }
         // Untrack image, so the range is unprotected and the guest can write freely.
         UntrackImage(image_id);
     });
@@ -390,24 +395,11 @@ void TextureCache::RefreshImage(Image& image, Vulkan::Scheduler* custom_schedule
         const u32 height = std::max(image.info.size.height >> m, 1u);
         const u32 depth =
             image.info.props.is_volume ? std::max(image.info.size.depth >> m, 1u) : 1u;
-        const auto& [mip_size, mip_pitch, mip_height, mip_ofs] = image.info.mips_layout[m];
-
-        // Protect GPU modified resources from accidental CPU reuploads.
-        const bool is_gpu_modified = True(image.flags & ImageFlagBits::GpuModified);
-        const bool is_gpu_dirty = True(image.flags & ImageFlagBits::GpuDirty);
-        if (is_gpu_modified && !is_gpu_dirty) {
-            const u8* addr = std::bit_cast<u8*>(image.info.guest_address);
-            const u64 hash = XXH3_64bits(addr + mip_ofs, mip_size);
-            if (image.mip_hashes[m] == hash) {
-                continue;
-            }
-            image.mip_hashes[m] = hash;
-        }
-
+        const auto& mip = image.info.mips_layout[m];
         image_copy.push_back({
-            .bufferOffset = mip_ofs * num_layers,
-            .bufferRowLength = static_cast<u32>(mip_pitch),
-            .bufferImageHeight = static_cast<u32>(mip_height),
+            .bufferOffset = mip.offset * num_layers,
+            .bufferRowLength = static_cast<u32>(mip.pitch),
+            .bufferImageHeight = static_cast<u32>(mip.height),
             .imageSubresource{
                 .aspectMask = image.aspect_mask & ~vk::ImageAspectFlagBits::eStencil,
                 .mipLevel = m,
