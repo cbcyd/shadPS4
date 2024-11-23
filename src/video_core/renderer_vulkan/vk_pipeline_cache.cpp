@@ -332,14 +332,14 @@ bool PipelineCache::RefreshGraphicsKey() {
         }
 
         const auto& bininfo = Liverpool::GetBinaryInfo(*pgm);
-        if (!bininfo.Valid()) {
+        if (!bininfo->Valid()) {
             LOG_WARNING(Render_Vulkan, "Invalid binary info structure!");
             key.stage_hashes[stage_out_idx] = 0;
             infos[stage_out_idx] = nullptr;
             return false;
         }
 
-        if (ShouldSkipShader(bininfo.shader_hash, "graphics")) {
+        if (ShouldSkipShader(bininfo->shader_hash, "graphics")) {
             return false;
         }
 
