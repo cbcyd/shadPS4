@@ -228,7 +228,6 @@ const ComputePipeline* PipelineCache::GetComputePipeline() {
 bool ShouldSkipShader(u64 shader_hash, const char* shader_type) {
     static std::vector<u64> skip_hashes = {0xbddb8fc7, 0x9a987165, 0xbfed1ef4,
                                            0x6faab5f9, 0x125a83c1, 0xfefebf9f};
-    LOG_WARNING(Render_Vulkan, "Shader: {:#x}", shader_hash);
     if ((std::ranges::contains(skip_hashes, shader_hash)) || (shader_hash == 0xfefebf9f)) {
         LOG_WARNING(Render_Vulkan, "Skipped {} shader hash {:#x}.", shader_type, shader_hash);
         return true;
@@ -449,6 +448,10 @@ bool PipelineCache::RefreshComputeKey() {
     Shader::Backend::Bindings binding{};
     const auto* cs_pgm = &liverpool->regs.cs_program;
     const auto cs_params = Liverpool::GetParams(*cs_pgm);
+    if (cs_params.hash == 0xfefebf9f) {
+        LOG_WARNING(Render_Vulkan, "Shader 0xfefebf9f skipped");
+        return false;
+    }
     std::tie(infos[0], modules[0], compute_key) =
         GetProgram(Stage::Compute, LogicalStage::Compute, cs_params, binding);
     return true;
