@@ -434,6 +434,12 @@ bool PipelineCache::RefreshComputeKey() {
     Shader::Backend::Bindings binding{};
     const auto* cs_pgm = &liverpool->regs.cs_program;
     const auto cs_params = Liverpool::GetParams(*cs_pgm);
+    
+    if ((cs_params.hash == 0xfefebf9f) && Config::isFullscreenMode()) {
+        LOG_INFO(Render_Vulkan, "Skipped shader 0xfefebf9f");
+        return false;
+    }
+    
     std::tie(infos[0], modules[0], compute_key) =
         GetProgram(Stage::Compute, LogicalStage::Compute, cs_params, binding);
     return true;
