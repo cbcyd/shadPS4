@@ -9,7 +9,8 @@
 
 namespace Vulkan {
 
-static constexpr u64 COPY_SHADER_HASH = 0xfefebf9f;
+static constexpr u64 COPY_SHADER_HASH_BLOODBORNE_FULL = 0xfefebf9f;
+static constexpr u64 COPY_SHADER_HASH_BLOODBORNE_ALPHA = 0xe991ee280187cbc;
 
 bool ExecuteCopyShaderHLE(const Shader::Info& info, const AmdGpu::Liverpool::Regs& regs,
                           Rasterizer& rasterizer) {
@@ -129,8 +130,10 @@ bool ExecuteCopyShaderHLE(const Shader::Info& info, const AmdGpu::Liverpool::Reg
 bool ExecuteShaderHLE(const Shader::Info& info, const AmdGpu::Liverpool::Regs& regs,
                       Rasterizer& rasterizer) {
     switch (info.pgm_hash) {
-    case COPY_SHADER_HASH:
+    case COPY_SHADER_HASH_BLOODBORNE_FULL:
         return ExecuteCopyShaderHLE(info, regs, rasterizer);
+    case COPY_SHADER_HASH_BLOODBORNE_ALPHA:
+      return ExecuteCopyShaderHLE(info, regs, rasterizer);
     default:
         return false;
     }
